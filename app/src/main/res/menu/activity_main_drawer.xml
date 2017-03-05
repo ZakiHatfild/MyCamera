@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/PhotoCamera"
+            android:icon="@drawable/ic_menu_camera"
+            android:title="Photo Camera" />
+        <item
+            android:id="@+id/VideoCamera"
+            android:icon="@drawable/ic_menu_camera"
+            android:title="Video Camera" />
+        <item
+            android:id="@+id/MyPhotos"
+            android:icon="@drawable/ic_menu_gallery"
+            android:title="My Photos" />
+        <item
+            android:id="@+id/MyVideos"
+            android:icon="@drawable/ic_menu_slideshow"
+            android:title="My Videos" />
+    </group>
+
+</menu>
