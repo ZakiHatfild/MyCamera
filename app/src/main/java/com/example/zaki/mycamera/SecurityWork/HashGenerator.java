@@ -5,6 +5,4 @@ package com.example.zaki.mycamera.SecurityWork;
  */
 
 public class HashGenerator {
-
-
 }

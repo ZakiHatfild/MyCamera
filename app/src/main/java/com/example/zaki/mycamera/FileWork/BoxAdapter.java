@@ -1,6 +1,8 @@
 package com.example.zaki.mycamera.FileWork;
 
 import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.CheckBox;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.zaki.mycamera.Models.FileModel;
@@ -27,16 +30,14 @@ public class BoxAdapter extends BaseAdapter {
     LayoutInflater lInflater;
     static ArrayList<FileModel> objects;
     static BoxAdapter adapter;
-    static String dir;
 
 
-    public BoxAdapter(Context context, ArrayList<FileModel> files, String _dir) {
+    public BoxAdapter(Context context, ArrayList<FileModel> files) {
         ctx = context;
         objects = files;
         lInflater = (LayoutInflater) ctx
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         adapter = this;
-        dir = _dir;
     }
 
     // кол-во элементов
@@ -60,7 +61,7 @@ public class BoxAdapter extends BaseAdapter {
     // пункт списка
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
-        // используем созданные, но не используемые view
+
         View view = convertView;
         if (view == null) {
             view = lInflater.inflate(R.layout.file_item, parent, false);
@@ -69,8 +70,14 @@ public class BoxAdapter extends BaseAdapter {
         FileModel p = getFileModel(position);
 
         try {
-            ((TextView) view.findViewById(R.id.name)).setText(p.name);
-            ((TextView) view.findViewById(R.id.path)).setText(p.path);
+            TextView txtName = (TextView) view.findViewById(R.id.name);
+            TextView txtPath =(TextView) view.findViewById(R.id.path);
+
+
+            txtName.setText(p.name.toString());
+            txtPath.setText(p.path.toString());
+
+            ((ImageView) view.findViewById(R.id.imageView)).setImageBitmap(p.image);
         }
         catch (Exception ex) {
             Log.d("AreYouCrazyTam", ex.getMessage());
@@ -79,8 +86,10 @@ public class BoxAdapter extends BaseAdapter {
         CheckBox cb = (CheckBox)view.findViewById(R.id.checkBox);
         final FileModel find = p;
 
+
         if (WorkSQLite.isPointChecked(ctx, find)) cb.setChecked(true);
         else cb.setChecked(false);
+
 
         cb.setOnClickListener(new AdapterView.OnClickListener() {
             @Override
@@ -98,14 +107,18 @@ public class BoxAdapter extends BaseAdapter {
         return ((FileModel) getItem(position));
     }
 
-    public static void update(Context context) {
-        objects.clear();
-        objects.addAll(FileWork.getFiles(dir));
+
+    public void setListItems(FileModel newList) {
+        objects.add(newList);
         adapter.notifyDataSetChanged();
     }
 
-    public static void clear() {
-        objects.clear();
+    public void deleteListItems(ArrayList<FileModel> delList) {
+        for (FileModel file: delList) {
+            for (FileModel obj: objects) {
+                if (file.name.equals(obj.name)) objects.remove(obj);
+            }
+        }
         adapter.notifyDataSetChanged();
     }
 

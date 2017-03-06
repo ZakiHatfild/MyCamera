@@ -5,7 +5,9 @@
     <string name="start_record">Start</string>
     <string name="stop_record">Stop</string>
 
-    <string name="navigation_drawer_open">Open navigation drawer</string>
-    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="videoCamera">Video Camera</string>
+    <string name="photoCamera">Photo camera</string>
+    <string name="myPhotos">Gallery of Photos</string>
+    <string name="myVideos">Gallery of Videos</string>
 
 </resources>

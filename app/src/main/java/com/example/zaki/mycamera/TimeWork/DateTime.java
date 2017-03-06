@@ -12,7 +12,7 @@ import java.util.Date;
 public class DateTime {
 
     public static String getTime() {
-        DateFormat df = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+        DateFormat df = new SimpleDateFormat("MM_dd_yyyy_HH_mm_ss");
         Date today = Calendar.getInstance().getTime();
         String reportDate = df.format(today);
         return reportDate;

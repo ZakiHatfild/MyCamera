@@ -1,6 +1,7 @@
 package com.example.zaki.mycamera.FileWork;
 
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Environment;
 
 import com.example.zaki.mycamera.Models.FileModel;
@@ -14,27 +15,35 @@ import java.util.ArrayList;
 
 public class FileWork {
 
-    public static ArrayList<FileModel> getFiles(String dir) {
+    /*public static class getFiles extends AsyncTask<String, Void, ArrayList<FileModel>> {
 
-        File rootFolder;
-        ArrayList<FileModel> files = new ArrayList<>();
+        @Override
+        protected ArrayList<FileModel> doInBackground(String... params) {
+            File rootFolder;
+            ArrayList<FileModel> files = new ArrayList<>();
 
-        switch (dir) {
-            case "pic": rootFolder = Environment
-                    .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES); break;
-            case "vid": rootFolder = Environment
-                    .getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES); break;
-            default: rootFolder = null; break;
+            switch (params[0]) {
+                case "pic": rootFolder = Environment
+                        .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES); break;
+                case "vid": rootFolder = Environment
+                        .getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES); break;
+                default: rootFolder = null; break;
+            }
+
+            File[] filesArray = rootFolder.listFiles();
+
+            for (File f: filesArray) {
+                if (f.isFile()) files.add(new FileModel(f.getName(), f.getPath()));
+            }
+
+            return files;
         }
 
-        File[] filesArray = rootFolder.listFiles();
-
-        for (File f: filesArray) {
-            if (f.isFile()) files.add(new FileModel(f.getName(), f.getPath()));
-        }
-
-        return files;
-    }
+       @Override
+       protected void onPostExecute(ArrayList<FileModel> value) {
+            super.onPostExecute(value);
+       }
+    }*/
 
     public static void deleteFiles(ArrayList<FileModel> files) {
 
