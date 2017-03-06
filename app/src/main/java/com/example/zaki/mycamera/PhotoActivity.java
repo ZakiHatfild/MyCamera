@@ -4,8 +4,11 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Matrix;
+import android.graphics.RectF;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
+import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Environment;
@@ -20,11 +23,15 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 
@@ -44,6 +51,9 @@ import java.io.FileOutputStream;
 import static com.example.zaki.mycamera.TimeWork.DateTime.getTime;
 
 public class PhotoActivity extends AppCompatActivity {
+
+    final int CAMERA_ID = 0;
+    final boolean FULL_SCREEN = true;
 
     SurfaceView surfaceView;
     Camera camera = null;
@@ -71,6 +81,14 @@ public class PhotoActivity extends AppCompatActivity {
             @Override
             public void surfaceChanged(SurfaceHolder holder, int format,
                                        int width, int height) {
+                camera.stopPreview();
+                setCameraDisplayOrientation(CAMERA_ID);
+                try {
+                    camera.setPreviewDisplay(holder);
+                    camera.startPreview();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
 
             @Override
@@ -82,7 +100,12 @@ public class PhotoActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
         setContentView(R.layout.activity_photo);
+
 
         pictures = Environment
                 .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
@@ -94,14 +117,12 @@ public class PhotoActivity extends AppCompatActivity {
             cameraEnabled = true;
         }
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        //Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        //setSupportActionBar(toolbar);
+        //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         Drawer dr = new Drawer()
                 .withActivity(this)
-                .withActionBarDrawerToggle(true)
-                .withToolbar(toolbar)
                 .withHeader(R.layout.drawer_header)
                 .addDrawerItems(
                         new PrimaryDrawerItem().withName(R.string.photoCamera).withIcon(FontAwesome.Icon.faw_camera).withIdentifier(1),
@@ -168,6 +189,7 @@ public class PhotoActivity extends AppCompatActivity {
         if (cameraEnabled) {
             camera = Camera.open();
             getImageSurface();
+            setPreviewSize(FULL_SCREEN);
         }
     }
 
@@ -197,6 +219,14 @@ public class PhotoActivity extends AppCompatActivity {
 
     public void onClickTakePhoto(View view) {
         if (cameraEnabled) {
+
+            new Thread(new Runnable() {
+                public void run() {
+                    MediaPlayer mp = MediaPlayer.create(getApplicationContext(), R.raw.photo_click);
+                    mp.start();
+                }
+            }).start();
+
             camera.takePicture(null, null, new PictureCallback() {
                 @Override
                 public void onPictureTaken(byte[] data, Camera camera) {
@@ -219,6 +249,86 @@ public class PhotoActivity extends AppCompatActivity {
                 }
             });
         }
+    }
+
+    void setPreviewSize(boolean fullScreen) {
+
+        // получаем размеры экрана
+        Display display = getWindowManager().getDefaultDisplay();
+        boolean widthIsMax = display.getWidth() > display.getHeight();
+
+        // определяем размеры превью камеры
+        Camera.Size size = camera.getParameters().getPreviewSize();
+
+        RectF rectDisplay = new RectF();
+        RectF rectPreview = new RectF();
+
+        // RectF экрана, соотвествует размерам экрана
+        rectDisplay.set(0, 0, display.getWidth(), display.getHeight());
+
+        // RectF первью
+        if (widthIsMax) {
+            // превью в горизонтальной ориентации
+            rectPreview.set(0, 0, size.width, size.height);
+        } else {
+            // превью в вертикальной ориентации
+            rectPreview.set(0, 0, size.height, size.width);
+        }
+
+        Matrix matrix = new Matrix();
+        // подготовка матрицы преобразования
+        if (!fullScreen) {
+            // если превью будет "втиснут" в экран (второй вариант из урока)
+            matrix.setRectToRect(rectPreview, rectDisplay, Matrix.ScaleToFit.START);
+        } else {
+            // если экран будет "втиснут" в превью (третий вариант из урока)
+            matrix.setRectToRect(rectDisplay, rectPreview, Matrix.ScaleToFit.START);
+            matrix.invert(matrix);
+        }
+        // преобразование
+        matrix.mapRect(rectPreview);
+
+        // установка размеров surface из получившегося преобразования
+        surfaceView.getLayoutParams().height = (int) (rectPreview.bottom);
+        surfaceView.getLayoutParams().width = (int) (rectPreview.right);
+    }
+
+    void setCameraDisplayOrientation(int cameraId) {
+        // определяем насколько повернут экран от нормального положения
+        int rotation = getWindowManager().getDefaultDisplay().getRotation();
+        int degrees = 0;
+        switch (rotation) {
+            case Surface.ROTATION_0:
+                degrees = 0;
+                break;
+            case Surface.ROTATION_90:
+                degrees = 90;
+                break;
+            case Surface.ROTATION_180:
+                degrees = 180;
+                break;
+            case Surface.ROTATION_270:
+                degrees = 270;
+                break;
+        }
+
+        int result = 0;
+
+        // получаем инфо по камере cameraId
+        Camera.CameraInfo info = new Camera.CameraInfo();
+        Camera.getCameraInfo(cameraId, info);
+
+        // задняя камера
+        if (info.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
+            result = ((360 - degrees) + info.orientation);
+        } else
+            // передняя камера
+            if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                result = ((360 - degrees) - info.orientation);
+                result += 360;
+            }
+        result = result % 360;
+        camera.setDisplayOrientation(result);
     }
 
 }
